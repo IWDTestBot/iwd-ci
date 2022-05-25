@@ -1,0 +1,105 @@
+name: IWD CI
+
+description: Runs IWD's CI
+
+inputs:
+  tests:
+    description: Tests to run (comma separated, no spaces)
+    default: all
+  kernel:
+    description: Kernel version
+    default: '5.16'
+  hostapd_version:
+    description: Hostapd and wpa_supplicant version
+    default: '2_10'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Test PR
+      shell: bash
+      run: |
+        PR=${GITHUB_REF#"refs/pull/"}
+        PR=${PR%"/merge"}
+        echo $PR
+        echo ${{ github.event_name }}
+
+    - name: Install Packages
+      shell: bash
+      run: |
+        echo $GITHUB_REPOSITORY
+        mkdir $GITHUB_WORKSPACE/cache
+        sudo apt -qq update
+        sudo apt -qq install qemu-system make git iw iproute2 haveged pip python-docutils pkg-config libreadline-dev libtool automake flex bison libelf-dev bc libssl-dev libnl-genl-3-dev libdbus-1-dev libnl-route-3-dev isc-dhcp-server radvd libc6 build-essential
+        sudo pip -q install termcolor prettytable pyroute2 pycrypto scapy regex PyGithub
+        sudo modprobe pkcs8_key_parser
+        # For some reason /etc/radvd.conf isn't getting installed
+        sudo touch /etc/radvd.conf
+
+    - name: Cache UML Kernel
+      id: cache-uml-kernel
+      uses: actions/cache@v3
+      with:
+        path: ${{ github.workspace }}/cache/um-linux-${{ inputs.kernel }}
+        key: um-linux-${{ inputs.kernel }}
+
+    - name: Cache Hostapd/WpaSupplicant
+      id: cache-wpas
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ github.workspace }}/cache/hostapd_${{ inputs.hostapd_version }}
+          ${{ github.workspace }}/cache/hostapd_cli_${{ inputs.hostapd_version }}
+          ${{ github.workspace }}/cache/wpa_supplicant_${{ inputs.hostapd_version }}
+          ${{ github.workspace }}/cache/wpa_cli_${{ inputs.hostapd_version }}
+        key: hostapd_wpa_supplicant_${{ inputs.hostapd_version }}
+
+    - name: Checkout IWD
+      uses: actions/checkout@v3
+      with:
+        path: iwd
+        repository: IWDTestBot/iwd
+
+    - name: Checkout ELL
+      uses: actions/checkout@v3
+      with:
+        path: ell
+        repository: IWDTestBot/ell
+
+    - name: Checkout CiBase
+      uses: actions/checkout@v3
+      with:
+        repository: IWDTestBot/cibase
+        path: cibase
+
+    - name: Checkout CI
+      uses: actions/checkout@v3
+      with:
+        repository: IWDTestBot/iwd-ci
+        path: iwd-ci
+
+    - name: Run
+      shell: bash
+      run: |
+        export PYTHONPATH=$(pwd)/cibase
+        cd iwd-ci/
+
+        if [ ${{ github.event_name }} == 'pull_request' ]
+        then
+          PR=${GITHUB_REF#"refs/pull/"}
+          PR='-p ${PR%"/merge"}'
+        else
+          PR=''
+        fi
+
+        python3 run-ci.py $PR -c config.ini -r IWDTestBot/iwd -s $GITHUB_WORKSPACE/iwd -e $GITHUB_WORKSPACE/ell -v
+
+    - name: Archive
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-runner-archive
+        path: |
+          ${{ github.workspace }}/log/
+
+
