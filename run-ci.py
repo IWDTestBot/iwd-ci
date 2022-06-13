@@ -209,5 +209,31 @@ class TestRunner(CiBase):
         self.submit_result(Verdict.PASS, "test-runner PASS")
         self.success()
 
+class ClangBuild(CiBase):
+    name = "clang"
+    display_name = "Clang Build"
+    desc = "Build IWD using clang compiler"
+    depends = ['setupell']
+
+    def run(self):
+        env = os.environ.copy()
+        env['CC'] = 'clang'
+
+        # bootstrap-configure
+        (ret, stdout, stderr) = self.run_cmd("./bootstrap-configure", env=env)
+        if ret:
+            self.submit_result(Verdict.FAIL,
+                               "Clang IWD - Configuration FAIL: " + stderr)
+            self.add_failure_end_test(stderr)
+
+        # make
+        (ret, stdout, stderr) = self.run_cmd("make", "-j4")
+        if ret:
+            self.submit_result(Verdict.FAIL, "Clang IWD - make FAIL: " + stderr)
+            self.add_failure_end_test(stderr)
+
+        self.submit_result(Verdict.PASS, "clang PASS")
+        self.success()
+
 CiBase.run()
 CiBase.print_results()
