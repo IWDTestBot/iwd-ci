@@ -29,6 +29,8 @@ inputs:
     required: true
   patchwork_token:
     required: true
+  repo:
+    default: 'IWDTestBot/iwd'
 
 runs:
   using: 'composite'
@@ -42,6 +44,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         EMAIL_TOKEN: ${{ inputs.email_token }}
         PATCHWORK_TOKEN : ${{ inputs.patchwork_token }}
+        GITHUB_REPO: ${{ inputs.repo }}
       run: |
         /usr/bin/docker build -t $GITHUB_RUN_ID -f "$GITHUB_ACTION_PATH/Dockerfile" "$GITHUB_ACTION_PATH"
         /usr/bin/docker run -v /dev/shm:/dev/shm --privileged --workdir /github/workspace --rm \
@@ -52,7 +55,7 @@ runs:
               -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_PATH -e GITHUB_JOB \
               -e GITHUB_ENV -e RUNNER_OS -e RUNNER_ARCH -e RUNNER_NAME -e RUNNER_TOOL_CACHE \
               -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN \
-              -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true \
+              -e ACTIONS_CACHE_URL -e GITHUB_REPO -e GITHUB_ACTIONS=true -e CI=true \
               -v "/var/run/docker.sock":"/var/run/docker.sock" \
               -v "/home/runner/work/_temp/_github_home":"/github/home" \
               -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" \
