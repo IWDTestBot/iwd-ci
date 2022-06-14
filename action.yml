@@ -30,7 +30,9 @@ inputs:
   patchwork_token:
     required: true
   repo:
-    default: 'IWDTestBot/iwd'
+    required: true
+  ref:
+    required: true
 
 runs:
   using: 'composite'
@@ -45,6 +47,7 @@ runs:
         EMAIL_TOKEN: ${{ inputs.email_token }}
         PATCHWORK_TOKEN : ${{ inputs.patchwork_token }}
         GITHUB_REPO: ${{ inputs.repo }}
+        GITHUB_REF: ${{ inputs.ref }}
       run: |
         /usr/bin/docker build -t $GITHUB_RUN_ID -f "$GITHUB_ACTION_PATH/Dockerfile" "$GITHUB_ACTION_PATH"
         /usr/bin/docker run -v /dev/shm:/dev/shm --privileged --workdir /github/workspace --rm \
