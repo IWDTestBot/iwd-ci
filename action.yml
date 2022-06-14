@@ -29,9 +29,9 @@ inputs:
     required: true
   patchwork_token:
     required: true
-  repo:
+  repository:
     required: true
-  ref:
+  ref_branch:
     required: true
 
 runs:
@@ -46,9 +46,11 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         EMAIL_TOKEN: ${{ inputs.email_token }}
         PATCHWORK_TOKEN : ${{ inputs.patchwork_token }}
-        GITHUB_REPO: ${{ inputs.repo }}
-        GITHUB_REF: ${{ inputs.ref }}
+        GITHUB_REPO: ${{ inputs.repository }}
+        REF_BRANCH: ${{ inputs.ref_branch }}
       run: |
+        echo "GITHUB_REPO: $GITHUB_REPO"
+        echo "GITHUB_REF: $GITHUB_REF"
         /usr/bin/docker build -t $GITHUB_RUN_ID -f "$GITHUB_ACTION_PATH/Dockerfile" "$GITHUB_ACTION_PATH"
         /usr/bin/docker run -v /dev/shm:/dev/shm --privileged --workdir /github/workspace --rm \
               -e GITHUB_TOKEN -e EMAIL_TOKEN -e PATCHWORK_TOKEN -e INPUT_TESTS -e GITHUB_ACTOR \
@@ -59,6 +61,7 @@ runs:
               -e GITHUB_ENV -e RUNNER_OS -e RUNNER_ARCH -e RUNNER_NAME -e RUNNER_TOOL_CACHE \
               -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN \
               -e ACTIONS_CACHE_URL -e GITHUB_REPO -e GITHUB_ACTIONS=true -e CI=true \
+              -e REF_BRANCH \
               -v "/var/run/docker.sock":"/var/run/docker.sock" \
               -v "/home/runner/work/_temp/_github_home":"/github/home" \
               -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" \
