@@ -38,7 +38,7 @@ runs:
   using: 'composite'
   steps:
     - name: Docker
-      shell: bash
+      uses: IWDTestBot/ci-docker@master
       env:
         INPUT_KERNEL: ${{ inputs.kernel }}
         INPUT_HOSTAPD_VERSION: ${{ inputs.hostapd_version }}
@@ -48,25 +48,7 @@ runs:
         PATCHWORK_TOKEN : ${{ inputs.patchwork_token }}
         GITHUB_REPO: ${{ inputs.repository }}
         REF_BRANCH: ${{ inputs.ref_branch }}
-      run: |
-        echo "GITHUB_REPO: $GITHUB_REPO"
-        echo "GITHUB_REF: $GITHUB_REF"
-        /usr/bin/docker build -t $GITHUB_RUN_ID -f "$GITHUB_ACTION_PATH/Dockerfile" "$GITHUB_ACTION_PATH"
-        /usr/bin/docker run -v /dev/shm:/dev/shm --privileged --workdir /github/workspace --rm \
-              -e GITHUB_TOKEN -e EMAIL_TOKEN -e PATCHWORK_TOKEN -e INPUT_TESTS -e GITHUB_ACTOR \
-              -e INPUT_KERNEL -e INPUT_HOSTAPD_VERSION -e HOME -e GITHUB_REF -e GITHUB_REPOSITORY \
-              -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_WORKFLOW \
-              -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_REF_NAME \
-              -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_PATH -e GITHUB_JOB \
-              -e GITHUB_ENV -e RUNNER_OS -e RUNNER_ARCH -e RUNNER_NAME -e RUNNER_TOOL_CACHE \
-              -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN \
-              -e ACTIONS_CACHE_URL -e GITHUB_REPO -e GITHUB_ACTIONS=true -e CI=true \
-              -e REF_BRANCH \
-              -v "/var/run/docker.sock":"/var/run/docker.sock" \
-              -v "/home/runner/work/_temp/_github_home":"/github/home" \
-              -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" \
-              -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" \
-              -v "$GITHUB_WORKSPACE":"$GITHUB_WORKSPACE" \
-              -v "/home/runner":"/home/runner" $GITHUB_RUN_ID
-
-
+      with:
+        image: Dockerfile
+        action_path: ${{ github.action_path }}
+        options: --privileged -v /dev/shm:/dev/shm
