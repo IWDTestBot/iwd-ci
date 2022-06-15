@@ -1,0 +1,7 @@
+FROM iwdcibot/iwd-ubuntu-build:latest
+
+COPY entrypoint.main.sh /
+COPY config.main.ini /
+COPY gitlint /
+
+ENTRYPOINT [ "/entrypoint.main.sh" ]

@@ -33,6 +33,9 @@ inputs:
     required: true
   ref_branch:
     required: true
+  ci:
+    description: The CI to run (main, musl)
+    default: 'main'
 
 runs:
   using: 'composite'
@@ -49,6 +52,6 @@ runs:
         GITHUB_REPO: ${{ inputs.repository }}
         REF_BRANCH: ${{ inputs.ref_branch }}
       with:
-        image: Dockerfile
+        image: Dockerfile.${{ inputs.ci }}
         action_path: ${{ github.action_path }}
         options: --privileged -v /dev/shm:/dev/shm

@@ -1,0 +1,6 @@
+FROM iwdcibot/iwd-alpine-build:latest
+
+COPY config.musl.ini /
+COPY entrypoint.musl.sh /
+
+ENTRYPOINT [ "/entrypoint.musl.sh" ]
