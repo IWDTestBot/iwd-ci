@@ -197,7 +197,7 @@ class TestRunner(CiBase):
         if self.tests:
             args.extend(['-A', ','.join(self.tests)])
 
-        (ret, stdout, stderr) = self.run_cmd(*args)
+        (ret, stdout, stderr) = self.run_cmd(*args, timeout=1800)
 
         with open(self.result, 'r') as f:
             r = f.read()
