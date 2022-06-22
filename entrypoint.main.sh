@@ -7,6 +7,9 @@ export
 
 mkdir $WORKDIR
 
+git config --global user.name "$GITHUB_ACTOR"
+git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
 if [ $REF_BRANCH != 'refs/heads/workflow' ]
 then
 	PR=${REF_BRANCH#"refs/pull/"}
