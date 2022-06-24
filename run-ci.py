@@ -127,10 +127,14 @@ class BuildHostapd(CiBase):
         if not os.path.exists(self.bin_dir):
             os.mkdir(self.bin_dir)
 
-        (ret, _, _) = self.run_cmd('git', 'clone', '-b', 'hostap_%s' % self.version,
-                            '--depth=1', 'http://w1.fi/hostap.git', self.workdir)
+        (ret, _, _) = self.run_cmd('git', 'clone', 'http://w1.fi/hostap.git', self.workdir)
         if ret:
             self.add_failure_end_test("Could not clone hostap")
+
+        self.src_dir = self.workdir
+        (ret, _, _) = self.run_cmd('git', 'checkout', self.version)
+        if ret:
+            self.add_failure_end_test("Could not checkout hostap %s" % self.version)
 
         if not hapd_exists:
             self.build_hostapd(hostapd, hostapd_cli)
