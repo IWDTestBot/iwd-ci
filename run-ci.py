@@ -137,9 +137,13 @@ class BuildHostapd(CiBase):
             self.add_failure_end_test("Could not checkout hostap %s" % self.version)
 
         if not hapd_exists:
+            self.ldebug("No cache found for hostapd in %s" % self.bin_dir)
+            os.listdir(self.bin_dir)
             self.build_hostapd(hostapd, hostapd_cli)
 
         if not wpa_exists:
+            self.ldebug("NO cache found for wpa_supplicant in %s" % self.bin_dir)
+            os.listdir(self.bin_dir)
             self.build_wpa_supplicant(wpa_s, wpa_s_cli)
 
         shutil.rmtree(self.workdir)
