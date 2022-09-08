@@ -27,23 +27,30 @@ class BuildKernel(CiBase):
     def run(self):
         self.config()
 
-        workdir = os.path.join(self.workdir, 'linux-git/')
-
         # Kernel already built
         if os.path.exists(self.kernel_path):
             print("Kernel already built: %s" % self.kernel_path)
             self.success()
 
-        if os.path.exists(workdir):
-            shutil.rmtree(workdir)
+        if os.path.exists(self.workdir):
+            shutil.rmtree(self.workdir)
+
+        linuxdir = self.workdir + '/linux-git'
+        regdbdir = self.workdir + '/wireless-regdb'
+
+        (ret, _, _) = self.run_cmd('git', 'clone', '--depth=1',
+                            'https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git',
+                            regdbdir)
+        if ret:
+            self.add_failure_end_test('Could not clone wireless-regdb')
 
         (ret, _, _) = self.run_cmd('git', 'clone', '-b', 'v%s' % self.version, '--depth=1',
                             'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
-                            workdir)
+                            linuxdir)
         if ret:
             self.add_failure_end_test("Could not clone linux")
 
-        self.src_dir = workdir
+        self.src_dir = linuxdir
 
         (ret, _, _) = self.run_cmd('make', 'ARCH=um', 'x86_64_defconfig')
         if ret:
@@ -55,13 +62,21 @@ class BuildKernel(CiBase):
         if ret:
             self.add_failure_end_test('Could not configure IWD kernel options')
 
-        subprocess.run('yes "" | make ARCH=um -j4', shell=True, cwd=self.src_dir)
+        (ret, _, _) = self.run_cmd('scripts/config', '--set-str',
+                                    'CONFIG_EXTRA_FIRMWARE_DIR', regdbdir)
+        if ret:
+            self.add_failure_end_test('Could not set EXTRA_FIRMWARE_DIR')
+
+        cp = subprocess.run('yes "" | make ARCH=um -j4', shell=True, cwd=self.src_dir)
+        if cp.returncode:
+            self.add_failure_end_test('Could not build linux kernel')
 
         if not os.path.exists(os.path.dirname(self.kernel_path)):
             os.mkdir(os.path.dirname(self.kernel_path))
 
-        shutil.copy(os.path.join(workdir, 'linux'), self.kernel_path)
-        shutil.rmtree(workdir)
+        shutil.copy(os.path.join(linuxdir, 'linux'), self.kernel_path)
+        shutil.rmtree(linuxdir)
+        shutil.rmtree(regdbdir)
 
         self.success()
 
