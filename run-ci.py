@@ -45,8 +45,7 @@ class BuildKernel(CiBase):
             self.add_failure_end_test('Could not clone wireless-regdb')
 
         (ret, _, _) = self.run_cmd('git', 'clone', '-b', 'v%s' % self.version, '--depth=1',
-                            'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
-                            linuxdir)
+                            'https://github.com/IWDTestBot/linux.git', linuxdir)
         if ret:
             self.add_failure_end_test("Could not clone linux")
 
