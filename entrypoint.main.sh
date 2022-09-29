@@ -5,6 +5,8 @@ export WORKDIR=$GITHUB_WORKSPACE/workdir
 
 export
 
+apt -y install valgrind
+
 mkdir $WORKDIR
 
 git config --global user.name "$GITHUB_ACTOR"
