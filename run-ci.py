@@ -203,7 +203,26 @@ class TestRunner(CiBase):
         if 'result' in self.settings:
             self.result = path_resolve(self.settings['result'])
 
+    def _get_failures(self, file):
+        failures = []
+
+        with open(file, 'r') as f:
+            results = f.read().split()
+
+        for r in results:
+            if ':' not in r:
+                continue
+
+            test, result = r.split(':')
+
+            if result == 'FAIL':
+                failures.append(test)
+
+        return failures
+
     def run(self):
+        rerun = None
+
         self.ldebug("##### Run autotest framework #####")
 
         self.config()
@@ -221,12 +240,28 @@ class TestRunner(CiBase):
 
         (ret, stdout, stderr) = self.run_cmd(*args, timeout=1800)
 
-        with open(self.result, 'r') as f:
-            r = f.read()
+        failures = self._get_failures(self.result)
 
-        if r != 'PASS':
-            self.submit_result(Verdict.FAIL, "test-runner - FAIL: " + stderr)
-            self.add_failure_end_test(stderr)
+        if failures != []:
+            rerun = ','.join(failures)
+
+            self.ldebug("Re-running failed tests: %s" % rerun)
+
+            # Don't use --log, this will overwrite the existing log dir
+            args = ['./tools/test-runner', '-k', self.kernel_path,
+                    '--result', self.result, '-A', rerun]
+
+            self.run_cmd(*args, timeout=1800)
+
+            failures = self._get_failures(self.result)
+
+        if failures != []:
+            tests = ','.join(failures)
+            self.submit_result(Verdict.FAIL, "test-runner - FAIL: " + tests)
+            self.add_failure_end_test(tests)
+
+        if rerun:
+            self.output = "Tests %s failed, but passed after re-running" % rerun
 
         self.submit_result(Verdict.PASS, "test-runner PASS")
         self.success()
