@@ -171,7 +171,7 @@ class TestRunner(CiBase):
     depends = ['buildmake', 'buildkernel', 'buildhostapd']
     inherit_src = 'build'
     kernel_path = '/linux'
-    tests = None
+    tests = os.environ.get('INPUT_TESTS', 'all')
     log_dir = '/tmp/logs'
     result = '/tmp/result/result.txt'
 
@@ -195,7 +195,7 @@ class TestRunner(CiBase):
             self.kernel_path = path_resolve(self.settings['kernel_path'])
 
         if 'tests' in self.settings:
-            self.tests = self.settings['tests'].split(',')
+            self.tests = self.settings['tests']
 
         if 'log_dir' in self.settings:
             self.log_dir = path_resolve(self.settings['log_dir'])
@@ -216,8 +216,8 @@ class TestRunner(CiBase):
         args = ['./tools/test-runner', '-k', self.kernel_path,
                 '--result', self.result, '--log', self.log_dir]
 
-        if self.tests:
-            args.extend(['-A', ','.join(self.tests)])
+        if self.tests != 'all':
+            args.extend(['-A', self.tests])
 
         (ret, stdout, stderr) = self.run_cmd(*args, timeout=1800)
 
