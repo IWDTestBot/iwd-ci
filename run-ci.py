@@ -29,7 +29,7 @@ class BuildKernel(CiBase):
 
         # Kernel already built
         if os.path.exists(self.kernel_path):
-            print("Kernel already built: %s" % self.kernel_path)
+            self.ldebug("Kernel already built: %s" % self.kernel_path)
             self.success()
 
         if os.path.exists(self.workdir):
