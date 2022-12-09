@@ -32,9 +32,6 @@ class BuildKernel(CiBase):
             self.ldebug("Kernel already built: %s" % self.kernel_path)
             self.success()
 
-        if os.path.exists(self.workdir):
-            shutil.rmtree(self.workdir)
-
         linuxdir = self.workdir + '/linux-git'
         regdbdir = self.workdir + '/wireless-regdb'
 
